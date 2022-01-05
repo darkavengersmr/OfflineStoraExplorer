@@ -3,6 +3,7 @@
 import asyncio
 import motor.motor_asyncio
 import os
+import time
 
 client = motor.motor_asyncio.AsyncIOMotorClient('mongodb://192.168.32.64:27017')
 db = client.offline_stora_explorer
@@ -45,11 +46,10 @@ async def do_list_dir_tmp(path):
 
 
 async def do_list_dir(collection, resource, path, parent):
-
     if parent == 'None':
         document = {'name': resource,
                 'directory': 'true',
-                'size': 0,
+                'size': 'unknown',
                 'parent': parent,
                 'resource': resource}
         id = await do_insert_one(collection, document)
@@ -57,6 +57,7 @@ async def do_list_dir(collection, resource, path, parent):
         id = parent
 
     all_data_size = 0
+    documents = []
 
     for file in os.listdir(path):
         if os.path.isfile(os.path.join(path, file)):
@@ -66,27 +67,29 @@ async def do_list_dir(collection, resource, path, parent):
                         'size': file_size,
                         'parent': id,
                         'resource': resource}
-            await do_insert_one(collection, document)
+            documents.append(document)
             all_data_size += file_size
         else:
-            dir_size = await do_list_dir(collection, resource, os.path.join(path, file), id)
             document = {'name': file,
                         'directory': 'true',
-                        'size': dir_size,
+                        'size': 'unknown',
                         'parent': id,
                         'resource': resource}
-            await do_insert_one(collection, document)
+            parent_id = await do_insert_one(collection, document)
+            dir_size = await do_list_dir(collection, resource, os.path.join(path, file), parent_id)
+            await do_update(collection, {'_id': parent_id}, {'$set': {'size': dir_size}})
             all_data_size += dir_size
-
+    if len(documents) > 0:
+        await do_insert_many(collection, documents)
     if parent == 'None':
         await do_update(collection, {'name': resource}, {'$set': {'size': all_data_size }})
-
     return all_data_size
 
+
 async def test():
+    t = time.time()
     await do_list_dir(db.test, "My test", "D:\\My Work", "None")
-
-
+    print("total sec:", time.time() - t)
 
 
 loop = asyncio.get_event_loop()
