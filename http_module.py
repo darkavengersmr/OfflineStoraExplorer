@@ -24,28 +24,35 @@ def setup_db():
 @router.get("/files/")
 async def go_to_dir(request: web.Request) -> web.Response:
     setup_db()
+    status = 200
 
     try:
         operation = request.query["operation"]
         id = request.query["id"]
     except:
         result = {'error': 'request invalid'}
+        status = 400
 
     try:
-        if operation == 'list':
+        if operation == 'dir_list':
             result = await get_list_dir(offline_stora_explorer_collection, id)
+            if len(result) == 0:
+                result = {'error': 'object is file, not directory'}
+                status = 400
         elif operation == 'dir_up':
             if id != 'None':
-                updir = await do_find_one(offline_stora_explorer_collection, { '_id': ObjectId(id)})
+                updir = await do_find_one(offline_stora_explorer_collection, {'_id': ObjectId(id)})
                 result = await get_list_dir(offline_stora_explorer_collection, updir['parent'])
             else:
                 result = await get_list_dir(offline_stora_explorer_collection, 'None')
         else:
             result = {'error': 'unknown operation'}
+            status = 400
     except:
         result = {'error': 'unknown data'}
+        status = 204
 
-    return web.json_response(result)
+    return web.json_response(result, status=status)
 
 
 @router.get("/savedata/")
@@ -55,11 +62,18 @@ async def save_data(request: web.Request) -> web.Response:
     resource = "My test"
     path = "D:\\My Work"
 
-    await do_delete_many(offline_stora_explorer_collection, {'resource': resource})
-    logging.info(f'resource {resource} deleted')
-    await do_list_dir(offline_stora_explorer_collection, resource, path, "None")
-    logging.info(f'resource {resource} created')
-    return web.json_response({'process': 'finished'})
+    try:
+        await do_delete_many(offline_stora_explorer_collection, {'resource': resource})
+        logging.info(f'resource {resource} deleted')
+        await do_list_dir(offline_stora_explorer_collection, resource, path, "None")
+        logging.info(f'resource {resource} created')
+        status = 200
+        result = {'process': 'finished'}
+    except:
+        status = 500
+        result = {'process': 'error'}
+
+    return web.json_response(result, status=status)
 
 async def root_handler(request):
     return web.HTTPFound('/index.html')
