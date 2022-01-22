@@ -1,20 +1,23 @@
 #!/usr/bin/python3
 
+import logging
+
 import asyncio
 import motor.motor_asyncio
-from bson.objectid import ObjectId
-from db_module import get_list_dir, do_find_one, do_list_dir, do_delete_many
 from aiohttp import web
-import logging
+from bson.objectid import ObjectId
+
+from db_module import get_list_dir, do_find_one, do_list_dir, do_delete_many
+
 
 router = web.RouteTableDef()
 offline_stora_explorer_collection = None
+db_socket = "192.168.32.64:27017"
 
-
-def setup_db():
+def setup_db(db_socket):
     global offline_stora_explorer_collection
     if offline_stora_explorer_collection == None:
-        db_client = motor.motor_asyncio.AsyncIOMotorClient('mongodb://192.168.32.64:27017',
+        db_client = motor.motor_asyncio.AsyncIOMotorClient(f'mongodb://{db_socket}',
                                                            io_loop=asyncio.get_event_loop())
         db = db_client.offline_stora_explorer
         offline_stora_explorer_collection = db.test
@@ -23,7 +26,7 @@ def setup_db():
 
 @router.get("/files/")
 async def go_to_dir(request: web.Request) -> web.Response:
-    setup_db()
+    setup_db(db_socket)
     status = 200
 
     try:
@@ -54,26 +57,6 @@ async def go_to_dir(request: web.Request) -> web.Response:
 
     return web.json_response(result, status=status)
 
-
-@router.get("/savedata/")
-async def save_data(request: web.Request) -> web.Response:
-    setup_db()
-
-    resource = "My test"
-    path = "D:\\My Work"
-
-    try:
-        await do_delete_many(offline_stora_explorer_collection, {'resource': resource})
-        logging.info(f'resource {resource} deleted')
-        await do_list_dir(offline_stora_explorer_collection, resource, path, "None")
-        logging.info(f'resource {resource} created')
-        status = 200
-        result = {'process': 'finished'}
-    except:
-        status = 500
-        result = {'process': 'error'}
-
-    return web.json_response(result, status=status)
 
 async def root_handler(request):
     return web.HTTPFound('/index.html')
