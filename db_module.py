@@ -24,7 +24,7 @@ async def do_find_one(collection, document):
 async def do_find(collection, document):
     cursor = collection.find(document)
     result = []
-    for document in await cursor.to_list(length=100):
+    for document in await cursor.to_list(length=100000):
         result.append(document)
     return result
 
@@ -101,20 +101,22 @@ async def get_list_dir(collection, parent):
     return result
 
 
+async def do_search(collection, search_string):
+    result = await do_find(collection, {'name': {'$regex': search_string}})
+    for obj in result:
+        obj['_id'] = str(obj['_id'])
+    return result
+
+
 async def test():
     db_client = motor.motor_asyncio.AsyncIOMotorClient('mongodb://192.168.32.64:27017',
                                                        io_loop=asyncio.get_event_loop())
     db = db_client.offline_stora_explorer
     offline_stora_explorer_collection = db.test
-    #import time
-    #t = time.time()
 
-    #await do_list_dir(offline_stora_explorer_collection, "My test", "D:\\My Work", "None")
-
-    #result = await get_list_dir(offline_stora_explorer_collection, "My test", "None")
-    result = await do_find_one(offline_stora_explorer_collection, { '_id': ObjectId('61d6a48f071c09cef22c5b89')})
+    result = await do_search(offline_stora_explorer_collection, "CS50")
     print(result)
-    #print("total sec:", time.time() - t)
+
 
 #loop = asyncio.get_event_loop()
 #loop.run_until_complete(test())

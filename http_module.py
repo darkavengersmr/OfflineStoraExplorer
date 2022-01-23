@@ -7,7 +7,7 @@ import motor.motor_asyncio
 from aiohttp import web
 from bson.objectid import ObjectId
 
-from db_module import get_list_dir, do_find_one, do_list_dir, do_delete_many
+from db_module import get_list_dir, do_find_one, do_search
 
 
 router = web.RouteTableDef()
@@ -51,6 +51,26 @@ async def go_to_dir(request: web.Request) -> web.Response:
         else:
             result = {'error': 'unknown operation'}
             status = 400
+    except:
+        result = {'error': 'unknown data'}
+        status = 204
+
+    return web.json_response(result, status=status)
+
+
+@router.get("/search/")
+async def go_search(request: web.Request) -> web.Response:
+    setup_db(db_socket)
+    status = 200
+
+    try:
+        search_string = request.query["search"]
+    except:
+        result = {'error': 'request invalid'}
+        status = 400
+
+    try:
+        result = await do_search(offline_stora_explorer_collection, search_string)
     except:
         result = {'error': 'unknown data'}
         status = 204
