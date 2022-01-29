@@ -79,8 +79,8 @@ async def go_search(request: web.Request) -> web.Response:
 
 
 @router.get("/command/")
-async def go_search(request: web.Request) -> web.Response:
-    valid_commands = ('disk_on', 'disk_off', 'disk_status')
+async def go_command(request: web.Request) -> web.Response:
+    valid_commands = ('disk', 'status')
     valid_parameters = my_disks
 
     command = request.query["command"]
