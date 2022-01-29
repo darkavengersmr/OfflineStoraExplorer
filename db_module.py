@@ -3,9 +3,6 @@
 import os, datetime
 from bson.objectid import ObjectId
 
-import asyncio
-import motor.motor_asyncio
-
 
 async def do_insert_one(collection, document):
     result = await collection.insert_one(document)
@@ -107,16 +104,3 @@ async def do_search(collection, search_string):
         obj['_id'] = str(obj['_id'])
     return result
 
-
-async def test():
-    db_client = motor.motor_asyncio.AsyncIOMotorClient('mongodb://192.168.32.64:27017',
-                                                       io_loop=asyncio.get_event_loop())
-    db = db_client.offline_stora_explorer
-    offline_stora_explorer_collection = db.test
-
-    result = await do_search(offline_stora_explorer_collection, "CS50")
-    print(result)
-
-
-#loop = asyncio.get_event_loop()
-#loop.run_until_complete(test())
