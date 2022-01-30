@@ -1,0 +1,31 @@
+components:
+  schemas:
+     files:
+      type: object
+      required:
+        - operation
+        - id
+      properties:
+        operation:
+          type: string
+        id:
+          type: string
+     search:
+      type: object
+      required:
+        - search
+      properties:
+        search:
+          type: string
+     command:
+      type: object
+      required:
+        - command
+        - parameter
+      properties:
+        command:
+          type: string
+        parameter:
+          type: string
+
+
