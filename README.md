@@ -9,4 +9,4 @@ DB: MongoDB
 - консольная утилита ofe_cli для создания, удаления сетевых ресурсов и обновления данных по ним в базе данных
 - документация к API в Swagger
 
-![alt text](screenshots/screenshot1.jpg "OfflineStoraExplorer")
+![alt text](screenshots/screenshot_swagger.jpg "OfflineStoraExplorer")
